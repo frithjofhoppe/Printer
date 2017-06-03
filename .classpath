@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="D:/Java/JavaLib/PDFBox/pdfbox-app-1.8.13.jar" sourcepath="/test"/>
+	<classpathentry kind="lib" path="D:/Java/JavaLib/PDFBox/fontbox-2.0.6.jar" sourcepath="/test"/>
+	<classpathentry kind="lib" path="D:/Java/JavaLib/PDFBox/pdfbox-tools-2.0.6.jar" sourcepath="/test"/>
+	<classpathentry kind="lib" path="D:/Java/JavaLib/PDFBox/pdfbox-2.0.6.jar" sourcepath="/Lernkartei"/>
+	<classpathentry kind="lib" path="D:/Java/JavaLib/PDFBox/preflight-2.0.6.jar" sourcepath=""/>
+	<classpathentry kind="lib" path="D:/Java/JavaLib/PDFBox/xmpbox-2.0.6.jar" sourcepath=""/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
