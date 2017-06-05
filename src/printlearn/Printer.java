@@ -1,284 +1,245 @@
 package printlearn;
 
-import java.awt.print.PrinterException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import javax.print.event.PrintJobAdapter;
-import javax.print.event.PrintJobEvent;
-
-import org.apache.pdfbox.PrintPDF;
-//import org.apache.pdfbox.pdmodel.font.PDVectorFont;
-import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.edit.PDPageContentStream;
-//import org.apache.pdfbox.pdmodel.font.PDCIDFontType2;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
-//import org.apache.pdfbox.printing.PDFPrinter;
-import javafx.scene.Node;
-import javafx.scene.shape.Circle;
 
 class Printer {
 
-	final public String savePath = "D:/karteikarten.pdf";
-	static int fontSize = 12;
-	public ArrayList<PDPage> pdfPages = new ArrayList<PDPage>();
-	public static ArrayList<FileInputStream> files = new ArrayList<FileInputStream>();
-	public static ArrayList<String[]> quantity = new ArrayList<String[]>();
 	public static float POINTS_PER_INCH = 72;
 	public static float POINTS_PER_MM = 1 / (10 * 2.54f) * POINTS_PER_INCH;
-	public static int sites = 0;
+	public static ArrayList<String[]> content = new ArrayList<String[]>();
+	public static ArrayList<String[]> cacheSpezific = new ArrayList<String[]>();
+	public static ArrayList<String[]> cacheAll = new ArrayList<String[]>();
+	public static String fileName = "D:/simp4.pdf"; // name of our file
+	public static int pages = 0;
+	public static int lastPage = 0;
+	public static int actualPage = 0;
 
 	public static void main(String[] args) throws Exception {
+		setValues();
+		pages = calculatePages(content.size());
+		
+		for (int i = 0; i < pages; i++) {
+			if (i == 0) {
+		
+				PDDocument doc = new PDDocument();
+				doc.save(fileName);
+				doc.close();
+				
+				
+				
+				cacheAll = content;
+			}
 
-		createPDF();
+			PDDocument doc2 = PDDocument.load(new File(fileName));
+			
+			cacheSpezific = createCaheSpezific(cacheAll);
+			createPage(doc2,2);
+			drawLines(doc2,actualPage);
+			drawText(doc2,actualPage);
+			actualPage+=2;
+			doc2.save(fileName);
+			doc2.close();
+			
+			
+			
+			print();
+		}
+		
 	}
 
-	public static void createPDF() throws COSVisitorException, IOException, PrinterException {
-		File file  = new File("D:/karteikarten.pdf");
-		PDDocument doc = PDDocument.load(file);
-		
-		setVariables();
-		createPage(doc, sites);
-		// createQuantitySpecificPage(doc, size);
-		//setText(quantity.size(), doc);
-		//setRaster(doc);
-		versuch();
-		saveDocument(doc);
-		//printDocument(doc);
-		
+
+
+	public static void setValues() {
+		for (int i = 0; i < 30; i++) {
+			String[] word = { Integer.toString(i), Integer.toString(i) };
+			content.add(word);
+		}
 	}
 
-	public static void printDocument(PDDocument d) throws PrinterException {
-		d.print();
+	public static int calculatePages(int size) {
+		int r = 1;
+		int count = 1;
+		
+		for(int i = 0; i < size; i++)
+		{
+			if(count == 16)
+			{
+				count = 1;
+				r += 1;
+			}
+			
+			count++;
+		}
+		System.out.print(r + " pages \n");
+		return r;
+	}
+
+	public static ArrayList<String[]> createCaheSpezific(ArrayList<String[]> list) 
+	{
+		ArrayList<String[]> r = new ArrayList<String[]>();
+		int count = 0;
+		int size = 0;
+		
+		if(list.size() > 16)
+		{
+			count = 16;
+			size  = list.size() - count -1;
+		}
+		else
+		{
+			count = list.size();
+			size = -1;
+		}
+		
+		
+		
+		for(int i = list.size()-1; i > size ; i--)
+		{
+			System.out.print(i+"!"+(size)+"/");
+			
+			r.add(list.get(i));
+			cacheAll.remove(i);
+		}
+		
+		return r;
 	}
 	
-	public static void versuch()
+	public static void print()
 	{
-		 try{
-        
-        System.out.println("Create Simple PDF file with Text");
-        String fileName = "d:/simp4.pdf"; // name of our file
-        
-        PDDocument doc = new PDDocument();
-        
-
-
-        for(int i = 0; i < 5;i++)
-        {
-        	doc.addPage(new PDPage());
-        }
-
-        PDPageContentStream content = new PDPageContentStream(doc, (PDPage) doc.getDocumentCatalog().getAllPages().get(2));
-        
-        content.beginText();
-        content.setFont(PDType1Font.HELVETICA, 26);
-        content.moveTextPositionByAmount(220, 750);
-        content.drawString("Registration Form");
-        content.endText();
-        
-        
-        content.beginText();
-        content.setFont(PDType1Font.HELVETICA, 16);
-        content.moveTextPositionByAmount(80, 700);
-        content.drawString("Name : ");
-        content.endText();
-        //klk
-        
-        
-        content.beginText();
-        content.setFont(PDType1Font.HELVETICA, 16);
-        content.moveTextPositionByAmount(80,650);
-        content.drawString("Father Name : ");
-        content.endText();
-        
-        content.beginText();
-        content.moveTextPositionByAmount(80,600);
-        content.drawString("DOB : ");
-        content.endText();
-        
-        content.drawLine(74,0,74,POINTS_PER_MM*148);
-        
-        content.close();
-        doc.save(fileName);
-        doc.close();
-        
-        System.out.println("your file created in : "+ System.getProperty("user.dir"));
-
-        }
-        catch(IOException | COSVisitorException e){
-        
-        System.out.println(e.getMessage());
-        
-        }
-
-	}
-
-	public static void setRaster(PDDocument doc) throws IOException {
-		float x = 0;
-		float y = 0;
-		PDDocumentCatalog docCatalog = doc.getDocumentCatalog();
-
-		for (int i = 0; i < sites + 1; i++) {
-			y = (float) (52.5 * POINTS_PER_MM);
-			x = 0;
-			PDPageContentStream newContentStream = new PDPageContentStream(doc,
-					(PDPage) docCatalog.getAllPages().get(i), true, false, false);
-			for (int o = 0; o < 3; o++) // horizontal
-			{
-				newContentStream.addLine(x, y, (float) (POINTS_PER_MM * 297), y);
-				System.out.print(x + " " + y + " " + (float) (POINTS_PER_MM * 297) + " " + y);
-				y += (POINTS_PER_MM * 52.5);
-			}
-
-			y = 0;
-			x = (float) (74.25 * POINTS_PER_MM);
-
-			for (int a = 0; a < 3; a++) // vertikal
-			{
-				newContentStream.addLine(x, y, x, (float) (POINTS_PER_MM * 210));
-				x += (POINTS_PER_MM * 74.25);
-			}
-			newContentStream.close();
+		for(String[] s: cacheSpezific)
+		{
+			System.out.print(s[0] + " "+ s[1] + " \n");
 		}
 	}
 
-	public static void createPage(PDDocument d, int value) {
-		for (int i = 0; i < value + 1; i++) {
-			d.addPage(new PDPage(new PDRectangle(297 * POINTS_PER_MM, 210 * POINTS_PER_MM)));
+	static void createPage(PDDocument temp,int count)
+	{
+		for(int i = 0; i < count;i++)
+		{
+			PDPage page = new PDPage(new PDRectangle(297 * POINTS_PER_MM, 210 * POINTS_PER_MM));
+			temp.addPage(page);
 		}
 	}
-
-	public static void saveDocument(PDDocument d) throws COSVisitorException, IOException {
-		d.save("d:\\karteikarten.pdf");
-		files.add(new FileInputStream("D:/karteikarten.pdf"));
-	}
-
-	public static void createQuantitySpecificPage(PDDocument doc, ArrayList<String[]> list) {
-		createPage(doc, list.size());
-	}
-
-	public static void setVariables() {
-		String[] test = { "nouveau", "neu" };
-		String[] test2 = { "vieille", "alt" };
-
-		quantity.add(test2);
-		quantity.add(test);
-
-		sites = (quantity.size() / 16);
-		sites += 1;
-
-		System.out.print(sites + " SEiten");
-	}
-
-	public static void setText(int all, PDDocument doc) throws IOException {
-		PDDocumentCatalog docCatalog = doc.getDocumentCatalog();
-
-		PDFont font = PDType1Font.HELVETICA_OBLIQUE;
-		ArrayList<String[]> cache = new ArrayList<String[]>();
-
-		System.out.print(cache.size() + " CacheSize");
-		
-		float x = 0;
-		float y = 0;
-
-		System.out.println(sites + " seiten");
-
-		for (int o = 0; o < sites; o++) {
+	
+	static void drawLines(PDDocument doc,int page)
+	{
+		try {
+			PDPageContentStream content1 = new PDPageContentStream(doc,(PDPage) doc.getDocumentCatalog().getAllPages().get(page),true,true);
+			//Vertical
+			content1.drawLine(0, (float)(POINTS_PER_MM * 52.5),POINTS_PER_MM * 297 , (float)(POINTS_PER_MM * 52.5));
+			content1.drawLine(0, POINTS_PER_MM * 105,POINTS_PER_MM * 297 , POINTS_PER_MM * 105);
+			content1.drawLine(0, (float)(POINTS_PER_MM * 157.5),POINTS_PER_MM * 297 , (float)(POINTS_PER_MM * 157.5));
 			
-			cache = getData();
-			x = 0;
-			y = 0;
-			
-			System.out.println(cache.size()+ " cache text");
-			PDPageContentStream contentStream = new PDPageContentStream(doc,(PDPage) docCatalog.getAllPages().get(o), true, false, false);
-			for (int a = 0; a < cache.size(); a++) {
-				for (int i = 1; i < cache.size() + 1; i++) {
-					setFirstText(cache.get(i - 1), contentStream, font, x, y);
-					x += (POINTS_PER_MM * 60.25);	
-				}
-				x = 0;
-				y += (POINTS_PER_MM * 52.25);
-			}
-
-			x = 594 * POINTS_PER_MM;
-			y = 0;
-
-			for (int a = 0; a < cache.size(); a++) {
-				for (int i = 1; i < cache.size() + 1; i++) {
-					setSecondText(cache.get(i - 1), contentStream, font, x, y);
-					x += (POINTS_PER_MM * 60.25);
-				}
-				x = 0;
-				y += (POINTS_PER_MM * 52.25);
-			}
-
+			//Horizontal
+			content1.drawLine((float)(POINTS_PER_MM * 74.25), 0,(float)(POINTS_PER_MM * 74.25),(float)(POINTS_PER_MM * 210));
+			content1.drawLine((float)(POINTS_PER_MM * 148.5), 0,(float)(POINTS_PER_MM * 148.5) , (float)(POINTS_PER_MM * 210));
+			content1.drawLine((float)(POINTS_PER_MM * 222.75), 0,(float)(POINTS_PER_MM * 222.75), (float)(POINTS_PER_MM * 210));
+			content1.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-
-	}
-
-	public static void setFirstText(String[] strings, PDPageContentStream contentStream, PDFont font, float x, float y)
-			throws IOException {
-		contentStream.beginText();
-		contentStream.setFont(font, fontSize);
-		contentStream.moveTextPositionByAmount(x, y);
-		contentStream.drawString(strings[0]);
-		contentStream.endText();
-
-	}
-
-	private static ArrayList<String[]> getData() {
-		ArrayList<String[]> back = new ArrayList<String[]>();
-		int size = 0;
-
-		System.out.print(quantity.size() + "quantity size$$$$");
 		
-		if (quantity.size() < 16) {
-			size = quantity.size();
-		} else {
-			size = 16;
+		try {
+			PDPageContentStream content2 = new PDPageContentStream(doc,(PDPage) doc.getDocumentCatalog().getAllPages().get(page+1),true,true);
+			//Vertical
+			content2.drawLine(0, (float)(POINTS_PER_MM * 52.5),POINTS_PER_MM * 297 , (float)(POINTS_PER_MM * 52.5));
+			content2.drawLine(0, POINTS_PER_MM * 105,POINTS_PER_MM * 297 , POINTS_PER_MM * 105);
+			content2.drawLine(0, (float)(POINTS_PER_MM * 157.5),POINTS_PER_MM * 297 , (float)(POINTS_PER_MM * 157.5));
+			
+			content2.drawLine((float)(POINTS_PER_MM * 74.25), 0,(float)(POINTS_PER_MM * 74.25),(float)(POINTS_PER_MM * 210));
+			content2.drawLine((float)(POINTS_PER_MM * 148.5), 0,(float)(POINTS_PER_MM * 148.5) , (float)(POINTS_PER_MM * 210));
+			content2.drawLine((float)(POINTS_PER_MM * 222.75), 0,(float)(POINTS_PER_MM * 222.75), (float)(POINTS_PER_MM * 210));
+			content2.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-
-		for (int i = 0; i < size; i++) {
-			back.add(quantity.get(i));
+	}
+	
+	static void drawText(PDDocument doc, int page)
+	{
+		PDFont font =  PDType1Font.HELVETICA_OBLIQUE;
+		int fontSize = 12;
+		int pos = 0;
+		double val1 = 37.125;
+		double val2 = 236.25;
+		double val3 = 259.875;
+		double val4 = 183.75;
+		for(int o = 0; o < 4; o++)
+		{
+			val2 -= 52.5;
+		for(int i = 0; i < 4;i++)
+				{
+			
+			float x = (float)(val1*POINTS_PER_MM);
+			float y = (float)(val2*POINTS_PER_MM);
+			float x2 = (float)(val3*POINTS_PER_MM);
+			float y2 = (float)(val4*POINTS_PER_MM);
+			
+			String one = "";
+			String two = "";
+			
+			if(pos >= cacheSpezific.size())
+			{
+				one = "-";
+				two = "-";
+			}
+			else
+			{
+				one = cacheSpezific.get(pos)[0];
+				two = cacheSpezific.get(pos)[1];
+			}
+			
+			try {
+				
+				PDPageContentStream content1 = new PDPageContentStream(doc,(PDPage) doc.getDocumentCatalog().getAllPages().get(page),true,true);
+				//Vertical
+				content1.beginText();
+				content1.setFont(font, fontSize);
+				content1.moveTextPositionByAmount(x, y);
+				content1.drawString(one);
+				content1.endText();
+				content1.close();
+				System.out.println(one);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+				
+			try {
+				PDPageContentStream content2 = new PDPageContentStream(doc,(PDPage) doc.getDocumentCatalog().getAllPages().get(page+1),true,true);
+				//Vertical
+				content2.beginText();
+				content2.setFont(font, fontSize);
+				content2.moveTextPositionByAmount(x2, y2);
+				content2.drawString(two);
+				content2.endText();
+				content2.close();
+				System.out.println(two);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			val1 += 74.25;
+			val3 -= 74.25;
+			pos ++;
 		}
-
-		return back;
-
+		val1 = 37.125;
+		val3 = 259.875;
+		
+		val4 -= 52.5;
+		
+		}
 	}
-
-	public static void setSecondText(String[] strings, PDPageContentStream contentStream, PDFont font, float x, float y)
-			throws IOException {
-		contentStream.beginText();
-		contentStream.setFont(font, fontSize);
-		contentStream.moveTextPositionByAmount(x, y);
-		contentStream.drawString(strings[1]);
-		contentStream.endText();
-
-	}
-
-	public void createPAgeLAyout() {
-		/*
-		 * float POINTS_PER_INCH = 72; float POINTS_PER_MM = 1 / (10 * 2.54f) *
-		 * POINTS_PER_INCH; new PDPage(new PDRectangle(297 * POINTS_PER_MM, 210
-		 * * POINTS_PER_MM));
-		 * 
-		 * PDPage page = new PDPage(PDRectangle.A4); page.setRotation(90);
-		 * doc.addPage(page); PDRectangle pageSize = page.getMediaBox(); float
-		 * pageWidth = pageSize.getWidth(); PDPageContentStream contentStream =
-		 * new PDPageContentStream(doc, page, AppendMode.OVERWRITE, false);
-		 * 
-		 * 
-		 * PDPage page = new PDPage(new PDRectangle(PDRectangle.A4.getHeight(),
-		 * PDRectangle.A4.getWidth()));
-		 */
-	}
-
 }
